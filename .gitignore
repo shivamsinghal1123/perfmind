@@ -17,7 +17,7 @@ env/
 .venv/
 
 # Generated outputs — these are personal
-outputs/
+# outputs/
 
 # IDE
 .vscode/
