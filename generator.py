@@ -24,7 +24,7 @@ class NFRGenerator:
                 "Please add it to your .env file."
             )
         self.client = anthropic.Anthropic(api_key=self.api_key)
-        self.model = "claude-opus-4-7"
+        self.model = os.getenv("ANTHROPIC_MODEL")
 
     def _build_prompt(self, app_description: str, user_stories: str = "") -> str:
         """Build the prompt for Claude to generate NFR requirements."""

@@ -35,3 +35,20 @@ Shivam Singhal — 11 years in Performance Engineering
 ## License
 Business Source License (BSL) — Free for personal and 
 community use. Commercial use restricted.
+
+
+## What PerfMind Generates
+
+In seconds, PerfMind produces:
+- Module-specific P50/P90/P95/P99 response time SLAs
+- Throughput calculations from daily user volumes
+- Concurrent user targets across load profiles
+- Infrastructure sizing recommendations
+- Compliance flags (HIPAA, PCI-DSS, RBI, FCA)
+- Prioritised test scenarios
+- Client clarification questions
+
+### Industries Tested
+✅ E-Commerce
+✅ Healthcare (HIPAA-aware)
+✅ Banking (Regulatory-aware)
