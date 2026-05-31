@@ -8,6 +8,7 @@ GitHub: https://github.com/shivamsinghal1123/perfmind
 
 from perfmind.generator import NFRGenerator
 from perfmind.utils import print_banner, save_output
+from perfmind.exporter import NFRDocumentExporter
 
 
 def main():
@@ -64,6 +65,20 @@ def main():
         print(f"\n💾 Output saved to: {output_path}")
     else:
         print("❌ Failed to generate requirements. Please check your API key and try again.")
+
+    # Step 4: Export result in .docx format
+    print("\nExport format:")
+    print("1. Word Document (.docx) — recommended for clients")
+    print("2. Markdown (.md) — for developers")
+    export_choice = input("\nChoose (1 or 2): ").strip()
+
+    if export_choice == "1":
+        exporter = NFRDocumentExporter()
+        output_path = exporter.export(result, app_description)
+        print(f"\n💾 Word document saved to: {output_path}")
+    else:
+        output_path = save_output(result, app_description)
+        print(f"\n💾 Markdown saved to: {output_path}")
 
 
 if __name__ == "__main__":
