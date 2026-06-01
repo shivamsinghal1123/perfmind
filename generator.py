@@ -1,9 +1,11 @@
 """
 PerfMind — Core NFR Generator
-Uses Claude API to generate structured Non-Functional Requirements
+Uses Claude API to generate structured Non-Functional Requirements.
 """
 
 import os
+import time
+
 import anthropic
 from dotenv import load_dotenv
 
@@ -13,7 +15,7 @@ load_dotenv()
 class NFRGenerator:
     """
     Generates structured NFR (Non-Functional Requirements) documents
-    using Claude AI based on application description and user stories.
+    using Claude AI based on application description.
     """
 
     def __init__(self):
@@ -23,26 +25,18 @@ class NFRGenerator:
                 "ANTHROPIC_API_KEY not found. "
                 "Please add it to your .env file."
             )
+        self.model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
         self.client = anthropic.Anthropic(api_key=self.api_key)
-        self.model = os.getenv("ANTHROPIC_MODEL")
 
-    def _build_prompt(self, app_description: str, user_stories: str = "") -> str:
-        """Build the prompt for Claude to generate NFR requirements."""
+    def _build_prompt(self, app_description: str) -> str:
+        """Build the Claude prompt for NFR generation."""
 
-        user_stories_section = ""
-        if user_stories:
-            user_stories_section = f"""
-User Stories / Acceptance Criteria:
-{user_stories}
-"""
-
-        return f"""You are PerfMind — an expert Performance Engineering AI with 40+ years of experience in Non-Functional Testing.
+        return f"""You are PerfMind — an expert Performance Engineering AI with 11+ years of experience in Non-Functional Testing.
 
 Your job is to analyse the application description below and generate a comprehensive, structured NFR (Non-Functional Requirements) document that a Performance Engineer can use immediately.
 
 Application Description:
 {app_description}
-{user_stories_section}
 
 Generate a structured NFR Requirements Document with the following sections:
 
@@ -86,32 +80,43 @@ Which test types are recommended and why:
 Be specific, practical and actionable. Base your recommendations on the application type and description provided. Where information is missing, clearly flag it as [NEEDS CLARIFICATION] so the engineer knows what to ask the client.
 """
 
-    def generate(self, app_description: str, user_stories: str = "") -> str:
+    def generate(self, app_description: str) -> str:
         """
         Generate NFR requirements document using Claude API.
 
         Args:
-            app_description: Description of the application
-            user_stories: Optional user stories or acceptance criteria
+            app_description: Plain English description of the application.
 
         Returns:
-            Structured NFR requirements document as string
+            Structured NFR requirements document as a string,
+            or None if generation fails.
+
+        Timing:
+            Prints API request and response times to stdout
+            for performance benchmarking.
         """
         try:
-            prompt = self._build_prompt(app_description, user_stories)
+            prompt = self._build_prompt(app_description)
 
+            print(f"  Model         : {self.model}")
+            print(f"  Prompt length : {len(prompt):,} characters")
+
+            api_start = time.perf_counter()
             message = self.client.messages.create(
                 model=self.model,
                 max_tokens=4096,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
+            api_duration = time.perf_counter() - api_start
 
-            return message.content[0].text
+            response_text = message.content[0].text
+
+            print(f"  Response length : {len(response_text):,} characters")
+            print(f"  Input tokens    : {message.usage.input_tokens:,}")
+            print(f"  Output tokens   : {message.usage.output_tokens:,}")
+            print(f"  API latency     : {api_duration:.2f}s")
+
+            return response_text
 
         except anthropic.AuthenticationError:
             print("❌ Invalid API key. Please check your ANTHROPIC_API_KEY in .env file.")

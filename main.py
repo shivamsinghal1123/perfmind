@@ -1,13 +1,15 @@
 """
 PerfMind 🧠
-AI-powered Requirements Generator for Performance Engineers
+AI-powered NFR Requirements Generator for Performance Engineers
 
 Author: Shivam Singhal
 GitHub: https://github.com/shivamsinghal1123/perfmind
 """
 
+import time
+
 from perfmind.generator import NFRGenerator
-from perfmind.utils import print_banner, save_output
+from perfmind.utils import print_banner
 from perfmind.exporter import NFRDocumentExporter
 
 
@@ -17,7 +19,9 @@ def main():
     print("Welcome to PerfMind — AI-powered NFR Requirements Generator\n")
     print("=" * 60)
 
-    # Step 1: Get application description from user
+    # ── Step 1: Collect application description ──────────────────
+    step1_start = time.perf_counter()
+
     print("\nDescribe your application (press Enter twice when done):")
     lines = []
     while True:
@@ -27,58 +31,56 @@ def main():
         lines.append(line)
     app_description = "\n".join(lines).strip()
 
+    step1_duration = time.perf_counter() - step1_start
+
     if not app_description:
         print("No description provided. Exiting.")
         return
 
-    # Step 2: Optional — get existing user stories
-    print("\nDo you have user stories or acceptance criteria to include? (y/n): ", end="")
-    has_stories = input().strip().lower()
-    user_stories = ""
-    if has_stories == "y":
-        print("Paste your user stories (press Enter twice when done):")
-        story_lines = []
-        while True:
-            line = input()
-            if line == "" and story_lines and story_lines[-1] == "":
-                break
-            story_lines.append(line)
-        user_stories = "\n".join(story_lines).strip()
+    print(f"\n⏱  Input collected in {step1_duration:.2f}s")
 
-    # Step 3: Generate NFR requirements
+    # ── Step 2: Generate NFR requirements via Claude API ─────────
     print("\n⏳ PerfMind is analysing your application and generating NFR requirements...\n")
 
+    step2_start = time.perf_counter()
+
     generator = NFRGenerator()
-    result = generator.generate(
-        app_description=app_description,
-        user_stories=user_stories
-    )
+    result = generator.generate(app_description=app_description)
 
-    if result:
-        print("\n" + "=" * 60)
-        print("✅ NFR REQUIREMENTS GENERATED SUCCESSFULLY")
-        print("=" * 60 + "\n")
-        print(result)
+    step2_duration = time.perf_counter() - step2_start
 
-        # Step 4: Save output
-        output_path = save_output(result, app_description)
-        print(f"\n💾 Output saved to: {output_path}")
-    else:
+    if not result:
         print("❌ Failed to generate requirements. Please check your API key and try again.")
+        return
 
-    # Step 4: Export result in .docx format
-    print("\nExport format:")
-    print("1. Word Document (.docx) — recommended for clients")
-    print("2. Markdown (.md) — for developers")
-    export_choice = input("\nChoose (1 or 2): ").strip()
+    print("\n" + "=" * 60)
+    print("✅ NFR REQUIREMENTS GENERATED SUCCESSFULLY")
+    print("=" * 60 + "\n")
+    print(result)
+    print(f"\n⏱  API call completed in {step2_duration:.2f}s")
 
-    if export_choice == "1":
-        exporter = NFRDocumentExporter()
-        output_path = exporter.export(result, app_description)
-        print(f"\n💾 Word document saved to: {output_path}")
-    else:
-        output_path = save_output(result, app_description)
-        print(f"\n💾 Markdown saved to: {output_path}")
+    # ── Step 3: Export to .docx ───────────────────────────────────
+    step3_start = time.perf_counter()
+
+    exporter = NFRDocumentExporter()
+    output_path = exporter.export(result, app_description)
+
+    step3_duration = time.perf_counter() - step3_start
+
+    print(f"\n💾 Word document saved to: {output_path}")
+    print(f"⏱  Export completed in {step3_duration:.2f}s")
+
+    # ── Timing Summary ────────────────────────────────────────────
+    total = step1_duration + step2_duration + step3_duration
+    print("\n" + "─" * 60)
+    print("📊 TIMING SUMMARY")
+    print("─" * 60)
+    print(f"  Step 1 — Input collection : {step1_duration:>8.2f}s")
+    print(f"  Step 2 — Claude API call  : {step2_duration:>8.2f}s")
+    print(f"  Step 3 — .docx export     : {step3_duration:>8.2f}s")
+    print(f"  {'─' * 38}")
+    print(f"  Total                     : {total:>8.2f}s")
+    print("─" * 60)
 
 
 if __name__ == "__main__":
